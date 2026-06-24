@@ -19,6 +19,9 @@ const stats = [
   { value: "от 2 нед.", label: "срок запуска" },
 ];
 
+// Данные тянутся из API в рантайме, а не на сборке (API недоступен при build).
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const works = await apiGetSafe<Work[]>("/works", []);
   const feed = await apiGetSafe<ReviewsFeed>("/reviews", {

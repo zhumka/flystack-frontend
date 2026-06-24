@@ -4,6 +4,9 @@ import { apiGetSafe } from "@/lib/api";
 import type { ReviewsFeed } from "@/lib/types";
 import { ReviewsBoard } from "@/components/ReviewsBoard";
 
+// Данные тянутся из API в рантайме, а не на сборке (API недоступен при build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Отзывы — Flystack",
   description: "Реальные модерируемые отзывы клиентов студии Flystack.",

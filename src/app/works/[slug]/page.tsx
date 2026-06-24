@@ -9,11 +9,8 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// SSG: пытаемся пререндерить известные работы (если API доступен на сборке).
-export async function generateStaticParams() {
-  const works = await apiGetSafe<Work[]>("/works", []);
-  return works.map((w) => ({ slug: w.slug }));
-}
+// Данные тянутся из API в рантайме, а не на сборке (API недоступен при build).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

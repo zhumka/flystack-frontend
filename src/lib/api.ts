@@ -3,8 +3,10 @@
 
 import { getAccessToken } from "./auth";
 
+// `||`, а не `??`: пустая строка из незаданного build-arg тоже должна уйти в fallback,
+// иначе API_URL="" даёт относительные URL и серверный fetch подвисает.
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export class ApiError extends Error {
   status: number;

@@ -3,6 +3,9 @@ import { apiGetSafe } from "@/lib/api";
 import type { Work } from "@/lib/types";
 import { WorksGrid } from "@/components/WorksGrid";
 
+// Данные тянутся из API в рантайме, а не на сборке (API недоступен при build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Работы — Flystack",
   description: "Портфолио студии Flystack: сайты, магазины, лендинги, боты.",
