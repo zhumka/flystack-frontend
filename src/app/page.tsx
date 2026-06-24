@@ -1,65 +1,154 @@
-import Image from "next/image";
+import Link from "next/link";
+import { apiGetSafe } from "@/lib/api";
+import type { ReviewsFeed, Work } from "@/lib/types";
+import { WorkCard } from "@/components/WorkCard";
+import { ReviewCard } from "@/components/ReviewCard";
 
-export default function Home() {
+const services = [
+  { title: "Сайт-визитка", desc: "Презентация бизнеса, которая вызывает доверие." },
+  { title: "Интернет-магазин", desc: "Каталог, корзина, оплата и удобная админка." },
+  { title: "Лендинг", desc: "Конверсионная страница под продукт или акцию." },
+  { title: "Корпоративный сайт", desc: "Многостраничный сайт компании с контентом." },
+  { title: "Telegram-бот и Mini App", desc: "Боты и мини-приложения внутри Telegram." },
+  { title: "Автоматизация", desc: "Связываем сервисы и убираем рутину." },
+];
+
+const stats = [
+  { value: "50+", label: "проектов" },
+  { value: "4.9", label: "средняя оценка" },
+  { value: "от 2 нед.", label: "срок запуска" },
+];
+
+export default async function HomePage() {
+  const works = await apiGetSafe<Work[]>("/works", []);
+  const feed = await apiGetSafe<ReviewsFeed>("/reviews", {
+    reviews: [],
+    summary: { average: 0, count: 0 },
+  });
+
+  const recentWorks = works.slice(0, 3);
+  const recentReviews = feed.reviews.slice(0, 3);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      {/* Герой */}
+      <section className="mx-auto max-w-6xl px-4 pt-16 pb-12 sm:pt-24">
+        <div className="frost max-w-3xl p-6 sm:p-10">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Студия цифровых продуктов
           </p>
+          <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-6xl">
+            Создаём сайты и сервисы, которые{" "}
+            <span className="text-primary">работают на результат</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-muted">
+            Сайты-визитки, магазины, лендинги, Telegram-боты и автоматизация —
+            под ключ, с понятными сроками и реальными отзывами клиентов.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/contact"
+              className="rounded-full bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-dark"
+            >
+              Обсудить проект
+            </Link>
+            <Link
+              href="/works"
+              className="rounded-full bg-white px-6 py-3 font-semibold text-ink ring-1 ring-black/10 transition-colors hover:ring-primary/40"
+            >
+              Посмотреть работы
+            </Link>
+          </div>
+
+          <dl className="mt-14 grid max-w-lg grid-cols-3 gap-8">
+            {stats.map((s) => (
+              <div key={s.label}>
+                <dt className="text-3xl font-bold text-primary">{s.value}</dt>
+                <dd className="mt-1 text-sm text-muted">{s.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Услуги */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
+          Что мы делаем
+        </h2>
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map((s) => (
+            <div
+              key={s.title}
+              className="rounded-[var(--radius-card)] bg-white p-6 shadow-sm ring-1 ring-black/5"
+            >
+              <h3 className="text-lg font-semibold">{s.title}</h3>
+              <p className="mt-2 text-sm text-muted">{s.desc}</p>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Недавние работы */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="flex items-end justify-between">
+          <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
+            Недавние проекты
+          </h2>
+          <Link href="/works" className="text-sm font-medium text-primary hover:underline">
+            Все работы →
+          </Link>
+        </div>
+        {recentWorks.length > 0 ? (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {recentWorks.map((w) => (
+              <WorkCard key={w.id} work={w} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-8 text-muted">Скоро здесь появятся проекты.</p>
+        )}
+      </section>
+
+      {/* Отзывы */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="flex items-end justify-between">
+          <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
+            Что говорят клиенты
+          </h2>
+          <Link href="/reviews" className="text-sm font-medium text-primary hover:underline">
+            Все отзывы →
+          </Link>
+        </div>
+        {recentReviews.length > 0 ? (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {recentReviews.map((r) => (
+              <ReviewCard key={r.id} review={r} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-8 text-muted">
+            Пока нет опубликованных отзывов — станьте первым.
+          </p>
+        )}
+      </section>
+
+      {/* Финальный CTA */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="rounded-[var(--radius-card)] bg-ink px-8 py-12 text-center text-white sm:py-16">
+          <h2 className="text-2xl font-bold sm:text-3xl">Есть идея проекта?</h2>
+          <p className="mx-auto mt-3 max-w-md text-white/70">
+            Расскажите задачу — предложим решение и сроки. Без обязательств.
+          </p>
+          <Link
+            href="/contact"
+            className="mt-7 inline-block rounded-full bg-accent px-7 py-3 font-semibold text-ink transition-transform hover:scale-105"
+          >
+            Обсудить проект
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }

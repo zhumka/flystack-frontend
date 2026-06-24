@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Берётся из .env рядом с compose-файлом на сервере (см. .env.example).
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    image: flystack-frontend
+    container_name: flystack-frontend
+    restart: unless-stopped
+    ports:
+      # Внешний порт → 3000 в контейнере. Поменяйте левую часть при необходимости.
+      - "3000:3000"

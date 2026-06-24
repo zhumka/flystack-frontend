@@ -1,26 +1,295 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Палитра и шрифт Flystack (см. ТЗ: дизайн-референс). */
+@theme {
+  --color-cream: #f6f3ec;
+  --color-ink: #1d1b27;
+  --color-primary: #7b61ff;
+  --color-primary-dark: #6a4ff0;
+  --color-accent: #ff9e7a;
+  --color-muted: #6f6a7d;
+
+  --font-sans: var(--font-onest), system-ui, sans-serif;
+
+  --radius-card: 20px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  /* Резервируем место под полосу прокрутки — навбар и футер не «прыгают»
+     по горизонтали при переходах между страницами разной высоты. */
+  scrollbar-gutter: stable;
+  background: var(--color-cream);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Кремовый «ореол» под заголовками — отделяет текст от фоновых фигур,
+   при этом невидим на однотонном кремовом фоне. */
+h1,
+h2 {
+  text-shadow: 0 2px 16px rgba(246, 243, 236, 0.92);
+}
+
+/* Матовое стекло с плавно растворяющимися краями (без чёткой грани).
+   Размытие и подложка живут в ::before и гаснут к краям через mask-градиент,
+   а сам текст (контент) остаётся чётким. */
+.frost {
+  position: relative;
+  isolation: isolate;
+}
+.frost::before {
+  content: "";
+  position: absolute;
+  /* Запас вокруг текста, чтобы сплошное ядро подложки перекрывало текст,
+     а фейд происходил уже снаружи. */
+  inset: -2rem -2.75rem;
+  z-index: -1;
+  /* Заметная матовая подложка-«лист»… */
+  background: rgba(246, 243, 236, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 32px;
+  /* …края которой плавно растворяются в фон на ФИКСИРОВАННОЕ расстояние от
+     каждого края (по 2rem), а не как радиальный эллипс. Радиальная маска
+     зависела от пропорций блока: у высокого героя фейд был плавным, а у
+     плоских заголовков с абзацем — резким. Пересечение двух линейных
+     градиентов даёт одинаковый по плавности переход на блоке любой формы. */
+  --frost-fade: 2rem;
+  -webkit-mask:
+    linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--frost-fade),
+      #000 calc(100% - var(--frost-fade)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--frost-fade),
+      #000 calc(100% - var(--frost-fade)),
+      transparent 100%
+    );
+  -webkit-mask-composite: source-in;
+  mask:
+    linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--frost-fade),
+      #000 calc(100% - var(--frost-fade)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--frost-fade),
+      #000 calc(100% - var(--frost-fade)),
+      transparent 100%
+    );
+  mask-composite: intersect;
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-26px);
+  }
+}
+
+@keyframes spin-cube {
+  from {
+    transform: rotateX(0deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(360deg) rotateY(360deg);
+  }
+}
+
+/* Появление страницы/секций. */
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Раскрытие выпадающего списка. */
+.animate-pop {
+  animation: pop 0.14s ease-out both;
+  transform-origin: top;
+}
+
+/* Плавность для интерактива по умолчанию. */
+a,
+button {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+/* ---------- Фоновые 3D-фигуры ---------- */
+
+.bg-decor {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.88;
+}
+
+/* Обёртка для плоских фигур: только парение. */
+.shape-wrap {
+  position: absolute;
+  animation: float-y 14s ease-in-out infinite;
+}
+
+.scene {
+  position: absolute;
+  perspective: 1000px;
+  animation: float-y 14s ease-in-out infinite;
+}
+
+@keyframes spin-2d {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Сфера — плотный шар с ярким солнечным бликом, мягким свечением и тенью. */
+.sphere {
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 28%),
+    radial-gradient(circle at 34% 30%, #c3b6ff, #7b61ff 46%, #4f33cf 100%);
+  box-shadow:
+    inset -10px -12px 34px rgba(40, 20, 90, 0.4),
+    0 22px 50px rgba(123, 97, 255, 0.28);
+  filter: drop-shadow(0 0 16px rgba(160, 140, 255, 0.4));
+}
+
+/* Кристалл (ромб) — гранёный, с глянцевым бликом и мягким свечением. */
+.gem {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  background: conic-gradient(
+    from 210deg,
+    #5538d6,
+    #d7ccff,
+    #7b61ff,
+    #4f33cf,
+    #5538d6
+  );
+  box-shadow:
+    inset 6px 6px 16px rgba(255, 255, 255, 0.5),
+    inset -8px -8px 20px rgba(40, 20, 90, 0.45);
+  filter: blur(0.4px) drop-shadow(0 12px 26px rgba(123, 97, 255, 0.4));
+  animation: spin-2d 36s linear infinite;
+}
+
+/* Призма (треугольник) с направленным глянцем и свечением. */
+.prism {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  background: linear-gradient(125deg, #d7ccff, #6a4ff0 55%, #4326c0);
+  box-shadow: inset 6px 6px 16px rgba(255, 255, 255, 0.45);
+  filter: blur(0.4px) drop-shadow(0 12px 26px rgba(123, 97, 255, 0.4));
+  animation: spin-2d 30s linear infinite reverse;
+}
+
+.cube {
+  position: relative;
+  width: var(--s);
+  height: var(--s);
+  transform-style: preserve-3d;
+  animation: spin-cube 44s linear infinite;
+}
+
+.cube .face {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  background:
+    radial-gradient(circle at 26% 20%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, #8b73ff, #5f44e0);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.face-front {
+  transform: rotateY(0deg) translateZ(calc(var(--s) / 2));
+}
+.face-back {
+  transform: rotateY(180deg) translateZ(calc(var(--s) / 2));
+}
+.face-right {
+  transform: rotateY(90deg) translateZ(calc(var(--s) / 2));
+}
+.face-left {
+  transform: rotateY(-90deg) translateZ(calc(var(--s) / 2));
+}
+.face-top {
+  transform: rotateX(90deg) translateZ(calc(var(--s) / 2));
+}
+.face-bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--s) / 2));
+}
+
+/* ---------- Красивый select ---------- */
+.select-styled {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237b61ff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 1.05rem;
+  padding-right: 2.6rem;
+  cursor: pointer;
+}
+
+/* Уважаем системную настройку «меньше движения». */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-pop,
+  .scene,
+  .cube,
+  .shape-wrap,
+  .gem,
+  .prism {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

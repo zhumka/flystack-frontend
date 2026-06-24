@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Минимальный самодостаточный сервер (.next/standalone) для лёгкого Docker-образа.
+  output: "standalone",
 };
 
 export default nextConfig;

@@ -1,0 +1,32 @@
+name: Deploy
+
+# Любой push в основную ветку запускает пересборку на сервере.
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Не даём двум деплоям идти одновременно — лишние отменяем.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull & rebuild on server over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git fetch --all --prune
+            git reset --hard "origin/${{ github.ref_name }}"
+            docker compose up -d --build
+            docker image prune -f
