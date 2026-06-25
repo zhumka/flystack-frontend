@@ -4,20 +4,23 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAccessToken, getStoredUser } from "@/lib/auth";
-
-const navItems = [
-  { href: "/admin", label: "Обзор" },
-  { href: "/admin/reviews", label: "Модерация отзывов" },
-  { href: "/admin/works", label: "Работы" },
-  { href: "/admin/leads", label: "Заявки" },
-  { href: "/admin/users", label: "Пользователи" },
-  { href: "/admin/content", label: "Контент" },
-];
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { locale } = useLocale();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+
+  const navItems = [
+    { href: "/admin", label: t(locale, "admin.nav.overview") },
+    { href: "/admin/reviews", label: t(locale, "admin.nav.reviews") },
+    { href: "/admin/works", label: t(locale, "admin.nav.works") },
+    { href: "/admin/leads", label: t(locale, "admin.nav.leads") },
+    { href: "/admin/users", label: t(locale, "admin.nav.users") },
+    { href: "/admin/content", label: t(locale, "admin.nav.content") },
+  ];
 
   useEffect(() => {
     const user = getStoredUser();
@@ -30,15 +33,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (authorized === null) {
     return (
-      <div className="px-4 py-24 text-center text-muted">Проверка доступа…</div>
+      <div className="px-4 py-24 text-center text-muted">
+        {t(locale, "admin.checking")}
+      </div>
     );
   }
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 md:flex-row">
-      <aside className="md:w-56 md:shrink-0">
+      <aside className="frost h-max md:w-56 md:shrink-0">
         <div className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">
-          Админ-панель
+          {t(locale, "admin.panel")}
         </div>
         <nav className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible">
           {navItems.map((item) => {

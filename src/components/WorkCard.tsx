@@ -1,7 +1,8 @@
 import Link from "next/link";
-import type { Work } from "@/lib/types";
+import type { Locale, Work } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
-export function WorkCard({ work }: { work: Work }) {
+export function WorkCard({ work, locale }: { work: Work; locale: Locale }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-[var(--radius-card)] bg-white shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary/20 to-accent/30">
@@ -37,13 +38,13 @@ export function WorkCard({ work }: { work: Work }) {
             href={`/works/${work.slug}`}
             className="rounded-full bg-ink px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
-            Подробнее
+            {t(locale, "card.details")}
           </Link>
           <Link
             href={`/reviews/new?work=${work.id}`}
             className="rounded-full px-4 py-1.5 text-sm font-medium text-primary ring-1 ring-primary/30 hover:bg-primary/5"
           >
-            Отзыв
+            {t(locale, "card.review")}
           </Link>
         </div>
       </div>

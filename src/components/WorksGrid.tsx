@@ -1,26 +1,34 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Work } from "@/lib/types";
+import type { Locale, Work } from "@/lib/types";
+import { t } from "@/lib/i18n";
 import { WorkCard } from "./WorkCard";
 
-export function WorksGrid({ works }: { works: Work[] }) {
+export function WorksGrid({
+  works,
+  locale,
+}: {
+  works: Work[];
+  locale: Locale;
+}) {
+  // "" — «все категории»; сам ярлык берём из словаря, чтобы фильтр не зависел от языка.
   const categories = useMemo(() => {
     const set = new Set(works.map((w) => w.category));
-    return ["Все", ...Array.from(set)];
+    return ["", ...Array.from(set)];
   }, [works]);
 
-  const [active, setActive] = useState("Все");
+  const [active, setActive] = useState("");
 
   const filtered =
-    active === "Все" ? works : works.filter((w) => w.category === active);
+    active === "" ? works : works.filter((w) => w.category === active);
 
   return (
     <>
       <div className="mt-8 flex flex-wrap gap-2">
         {categories.map((cat) => (
           <button
-            key={cat}
+            key={cat || "__all"}
             onClick={() => setActive(cat)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               active === cat
@@ -28,7 +36,7 @@ export function WorksGrid({ works }: { works: Work[] }) {
                 : "bg-white text-ink/70 ring-1 ring-black/10 hover:ring-primary/40"
             }`}
           >
-            {cat}
+            {cat || t(locale, "common.all")}
           </button>
         ))}
       </div>
@@ -36,11 +44,11 @@ export function WorksGrid({ works }: { works: Work[] }) {
       {filtered.length > 0 ? (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((w) => (
-            <WorkCard key={w.id} work={w} />
+            <WorkCard key={w.id} work={w} locale={locale} />
           ))}
         </div>
       ) : (
-        <p className="mt-10 text-muted">В этой категории пока нет работ.</p>
+        <p className="mt-10 text-muted">{t(locale, "works.emptyCategory")}</p>
       )}
     </>
   );

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { apiGetSafe } from "@/lib/api";
+import { apiGetSafe, localePath } from "@/lib/api";
 import type { ReviewsFeed, Work } from "@/lib/types";
+import { t } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/locale-server";
 import { ReviewCard } from "@/components/ReviewCard";
 
 interface PageProps {
@@ -14,8 +16,9 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const work = await apiGetSafe<Work | null>(`/works/${slug}`, null);
-  if (!work) return { title: "Работа не найдена — Flystack" };
+  const locale = await getServerLocale();
+  const work = await apiGetSafe<Work | null>(localePath(`/works/${slug}`, locale), null);
+  if (!work) return { title: "Flystack" };
   return {
     title: `${work.title} — Flystack`,
     description: work.tagline || work.subtitle || work.title,
@@ -60,10 +63,11 @@ function Block({ title, text }: { title: string; text: string }) {
 
 export default async function WorkCasePage({ params }: PageProps) {
   const { slug } = await params;
-  const work = await apiGetSafe<Work | null>(`/works/${slug}`, null);
+  const locale = await getServerLocale();
+  const work = await apiGetSafe<Work | null>(localePath(`/works/${slug}`, locale), null);
   if (!work) notFound();
 
-  const feed = await apiGetSafe<ReviewsFeed>("/reviews", {
+  const feed = await apiGetSafe<ReviewsFeed>(localePath("/reviews", locale), {
     reviews: [],
     summary: { average: 0, count: 0 },
   });
@@ -76,7 +80,7 @@ export default async function WorkCasePage({ params }: PageProps) {
       <div className="inline-block frost">
         <div className="flex items-center gap-2 text-sm text-muted">
           <Link href="/works" className="hover:text-primary">
-            Работы
+            {t(locale, "nav.works")}
           </Link>
           <span>/</span>
           <span>{work.category}</span>
@@ -94,13 +98,13 @@ export default async function WorkCasePage({ params }: PageProps) {
           href={`/reviews/new?work=${work.id}`}
           className="rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
         >
-          Оставить отзыв
+          {t(locale, "case.leaveReview")}
         </Link>
         <Link
           href="/contact"
           className="rounded-full bg-white px-6 py-3 font-semibold text-ink ring-1 ring-black/10 hover:ring-primary/40"
         >
-          Хочу похожий проект
+          {t(locale, "case.wantSimilar")}
         </Link>
       </div>
 
@@ -135,16 +139,16 @@ export default async function WorkCasePage({ params }: PageProps) {
 
       {/* Задача → Решение → Результат */}
       <div className="mt-12 grid gap-8 sm:grid-cols-3">
-        <Block title="Задача" text={work.challenge} />
-        <Block title="Решение" text={work.solution} />
-        <Block title="Результат" text={work.result} />
+        <Block title={t(locale, "case.challenge")} text={work.challenge} />
+        <Block title={t(locale, "case.solution")} text={work.solution} />
+        <Block title={t(locale, "case.result")} text={work.result} />
       </div>
 
       {/* Услуги */}
       {work.services.length > 0 && (
         <div className="mt-12">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Услуги
+            {t(locale, "case.services")}
           </h3>
           <div className="mt-3 flex flex-wrap gap-2">
             {work.services.map((s) => (
@@ -177,7 +181,7 @@ export default async function WorkCasePage({ params }: PageProps) {
       {/* Отзывы об этой работе */}
       {workReviews.length > 0 && (
         <div className="mt-16">
-          <h2 className="text-2xl font-bold">Отзывы об этой работе</h2>
+          <h2 className="text-2xl font-bold">{t(locale, "case.reviewsAbout")}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
             {workReviews.map((r) => (
               <ReviewCard key={r.id} review={r} />
@@ -188,12 +192,12 @@ export default async function WorkCasePage({ params }: PageProps) {
 
       {/* CTA */}
       <div className="mt-16 rounded-[var(--radius-card)] bg-ink px-8 py-12 text-center text-white">
-        <h2 className="text-2xl font-bold">Хотите такой же результат?</h2>
+        <h2 className="text-2xl font-bold">{t(locale, "case.ctaTitle")}</h2>
         <Link
           href="/contact"
           className="mt-6 inline-block rounded-full bg-accent px-7 py-3 font-semibold text-ink transition-transform hover:scale-105"
         >
-          Обсудить проект
+          {t(locale, "nav.discuss")}
         </Link>
       </div>
     </article>

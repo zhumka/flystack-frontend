@@ -5,18 +5,22 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AUTH_EVENT, clearAuth, getStoredUser } from "@/lib/auth";
 import type { User } from "@/lib/types";
-
-const navLinks = [
-  { href: "/", label: "Главная" },
-  { href: "/works", label: "Работы" },
-  { href: "/reviews", label: "Отзывы" },
-];
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export function Navbar() {
+  const { locale } = useLocale();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  const navLinks = [
+    { href: "/", label: t(locale, "nav.home") },
+    { href: "/works", label: t(locale, "nav.works") },
+    { href: "/reviews", label: t(locale, "nav.reviews") },
+  ];
 
   useEffect(() => {
     const sync = () => setUser(getStoredUser());
@@ -69,6 +73,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <LocaleSwitcher />
           {ready && user ? (
             <>
               {user.role === "admin" && (
@@ -76,20 +81,20 @@ export function Navbar() {
                   href="/admin"
                   className="hidden text-sm font-medium text-primary hover:text-primary-dark sm:block"
                 >
-                  Админка
+                  {t(locale, "nav.admin")}
                 </Link>
               )}
               <Link
                 href="/me"
                 className="hidden text-sm font-medium text-ink/80 hover:text-primary sm:block"
               >
-                {user.name || "Кабинет"}
+                {user.name || t(locale, "nav.account")}
               </Link>
               <button
                 onClick={logout}
                 className="text-sm font-medium text-muted hover:text-ink"
               >
-                Выйти
+                {t(locale, "nav.logout")}
               </button>
             </>
           ) : (
@@ -98,7 +103,7 @@ export function Navbar() {
                 href="/login"
                 className="text-sm font-medium text-ink/80 hover:text-primary"
               >
-                Войти
+                {t(locale, "nav.login")}
               </Link>
             )
           )}
@@ -106,7 +111,7 @@ export function Navbar() {
             href="/contact"
             className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
           >
-            Обсудить проект
+            {t(locale, "nav.discuss")}
           </Link>
         </div>
       </div>

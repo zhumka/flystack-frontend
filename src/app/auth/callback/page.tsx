@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { saveAuth, saveTokens } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { User } from "@/lib/types";
 
 // Бэкенд после Google OAuth редиректит сюда с токенами во фрагменте URL:
@@ -11,6 +13,7 @@ import type { User } from "@/lib/types";
 // (для этого APP_BASE_URL на бэкенде должен указывать на фронтенд.)
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const { locale } = useLocale();
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -43,19 +46,17 @@ export default function AuthCallbackPage() {
     <section className="mx-auto max-w-md px-4 py-24 text-center">
       {error ? (
         <>
-          <h1 className="text-2xl font-bold">Не удалось войти</h1>
-          <p className="mt-2 text-muted">
-            Ссылка авторизации недействительна. Попробуйте ещё раз.
-          </p>
+          <h1 className="text-2xl font-bold">{t(locale, "cb.failTitle")}</h1>
+          <p className="mt-2 text-muted">{t(locale, "cb.failText")}</p>
           <button
             onClick={() => router.replace("/login")}
             className="mt-6 rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
           >
-            На страницу входа
+            {t(locale, "cb.toLogin")}
           </button>
         </>
       ) : (
-        <p className="text-muted">Завершаем вход…</p>
+        <p className="text-muted">{t(locale, "cb.finishing")}</p>
       )}
     </section>
   );

@@ -2,20 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { ReviewItem } from "@/lib/types";
 
 type Tab = "pending" | "approved" | "rejected";
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: "pending", label: "Ожидают" },
-  { key: "approved", label: "Опубликованные" },
-  { key: "rejected", label: "Отклонённые" },
-];
-
 export default function AdminReviewsPage() {
+  const { locale } = useLocale();
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [tab, setTab] = useState<Tab>("pending");
   const [loading, setLoading] = useState(true);
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "pending", label: t(locale, "admin.tab.pending") },
+    { key: "approved", label: t(locale, "admin.tab.approved") },
+    { key: "rejected", label: t(locale, "admin.tab.rejected") },
+  ];
 
   useEffect(() => {
     apiRequest<ReviewItem[]>("/admin/reviews", { auth: true })
@@ -42,7 +45,7 @@ export default function AdminReviewsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Модерация отзывов</h1>
+      <h1 className="text-2xl font-bold">{t(locale, "admin.reviewsTitle")}</h1>
 
       <div className="mt-6 flex gap-2">
         {tabs.map((t) => (
@@ -61,9 +64,9 @@ export default function AdminReviewsPage() {
       </div>
 
       {loading ? (
-        <p className="mt-8 text-muted">Загрузка…</p>
+        <p className="mt-8 text-muted">{t(locale, "admin.loading")}</p>
       ) : list.length === 0 ? (
-        <p className="mt-8 text-muted">Здесь пусто.</p>
+        <p className="mt-8 text-muted">{t(locale, "admin.empty")}</p>
       ) : (
         <div className="mt-6 space-y-4">
           {list.map((r) => (
@@ -81,7 +84,9 @@ export default function AdminReviewsPage() {
                     {r.role_text && ` · ${r.role_text}`}
                   </div>
                   <div className="text-xs text-muted">
-                    {new Date(r.created_at).toLocaleString("ru-RU")}
+                    {new Date(r.created_at).toLocaleString(
+                      locale === "en" ? "en-US" : "ru-RU",
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -90,7 +95,9 @@ export default function AdminReviewsPage() {
                       onClick={() => moderate(r.id, "approved")}
                       className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
                     >
-                      {tab === "rejected" ? "Всё же опубликовать" : "Опубликовать"}
+                      {tab === "rejected"
+                        ? t(locale, "admin.publishAnyway")
+                        : t(locale, "admin.publish")}
                     </button>
                   )}
                   {tab !== "rejected" && (
@@ -98,7 +105,7 @@ export default function AdminReviewsPage() {
                       onClick={() => moderate(r.id, "rejected")}
                       className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-red-600 ring-1 ring-red-200 hover:bg-red-50"
                     >
-                      Отклонить
+                      {t(locale, "admin.reject")}
                     </button>
                   )}
                   {tab === "approved" && (
@@ -106,7 +113,7 @@ export default function AdminReviewsPage() {
                       onClick={() => moderate(r.id, "pending")}
                       className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-50"
                     >
-                      Снять с публикации
+                      {t(locale, "admin.unpublish")}
                     </button>
                   )}
                 </div>

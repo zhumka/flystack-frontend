@@ -1,0 +1,633 @@
+// Локализация интерфейса ru/en. Этот модуль безопасен и на сервере, и в браузере
+// (без импорта next/headers — серверное чтение локали см. в lib/locale-server.ts).
+
+import type { Locale, LocalizedText } from "./types";
+
+export const LOCALES: Locale[] = ["ru", "en"];
+export const DEFAULT_LOCALE: Locale = "ru";
+export const LOCALE_COOKIE = "locale";
+
+// Приводит произвольный ввод к поддерживаемой локали (дефолт ru) — как на бэкенде.
+export function normalizeLocale(value: string | null | undefined): Locale {
+  return value === "en" ? "en" : "ru";
+}
+
+// Сворачивает локализованный текст из админских ответов в строку (откат ru → en).
+export function localized(
+  value: LocalizedText | string | null | undefined,
+  locale: Locale,
+): string {
+  if (typeof value === "string") return value;
+  if (!value) return "";
+  return value[locale] || value.ru || value.en || "";
+}
+
+// --- Чтение/запись локали в браузере (cookie + localStorage) ---
+
+export function getClientLocale(): Locale {
+  if (typeof document === "undefined") return DEFAULT_LOCALE;
+  const fromCookie = document.cookie.match(/(?:^|;\s*)locale=(\w+)/)?.[1];
+  if (fromCookie) return normalizeLocale(fromCookie);
+  try {
+    return normalizeLocale(localStorage.getItem(LOCALE_COOKIE));
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+export function setClientLocale(locale: Locale): void {
+  document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=31536000;samesite=lax`;
+  try {
+    localStorage.setItem(LOCALE_COOKIE, locale);
+  } catch {
+    /* недоступно — игнорируем */
+  }
+}
+
+// --- Словарь статичных текстов интерфейса ---
+
+const dict: Record<Locale, Record<string, string>> = {
+  ru: {
+    // навигация / общий чром
+    "nav.home": "Главная",
+    "nav.works": "Работы",
+    "nav.reviews": "Отзывы",
+    "nav.discuss": "Обсудить проект",
+    "nav.login": "Войти",
+    "nav.account": "Кабинет",
+    "nav.admin": "Админка",
+    "nav.logout": "Выйти",
+    "common.all": "Все",
+    "common.viewWork": "Посмотреть работы",
+    "footer.tagline": "Студия цифровых продуктов",
+
+    // главная
+    "home.kicker": "Студия цифровых продуктов",
+    "home.heroTitle": "Создаём сайты и сервисы, которые",
+    "home.heroTitleAccent": "работают на результат",
+    "home.heroSubtitle":
+      "Сайты-визитки, магазины, лендинги, Telegram-боты и автоматизация — под ключ, с понятными сроками и реальными отзывами клиентов.",
+    "home.servicesTitle": "Что мы делаем",
+    "home.recentProjects": "Недавние проекты",
+    "home.allWorks": "Все работы →",
+    "home.clientsSay": "Что говорят клиенты",
+    "home.allReviews": "Все отзывы →",
+    "home.noProjects": "Скоро здесь появятся проекты.",
+    "home.noReviews": "Пока нет опубликованных отзывов — станьте первым.",
+    "home.finalTitle": "Есть идея проекта?",
+    "home.finalSubtitle":
+      "Расскажите задачу — предложим решение и сроки. Без обязательств.",
+    "stats.projects": "проектов",
+    "stats.rating": "средняя оценка",
+    "stats.term": "срок запуска",
+    "stats.termValue": "от 2 нед.",
+
+    // услуги (главная)
+    "svc.landing.title": "Сайт-визитка",
+    "svc.landing.desc": "Презентация бизнеса, которая вызывает доверие.",
+    "svc.shop.title": "Интернет-магазин",
+    "svc.shop.desc": "Каталог, корзина, оплата и удобная админка.",
+    "svc.promo.title": "Лендинг",
+    "svc.promo.desc": "Конверсионная страница под продукт или акцию.",
+    "svc.corp.title": "Корпоративный сайт",
+    "svc.corp.desc": "Многостраничный сайт компании с контентом.",
+    "svc.bot.title": "Telegram-бот и Mini App",
+    "svc.bot.desc": "Боты и мини-приложения внутри Telegram.",
+    "svc.auto.title": "Автоматизация",
+    "svc.auto.desc": "Связываем сервисы и убираем рутину.",
+
+    // страница работ
+    "works.title": "Работы",
+    "works.subtitle":
+      "Проекты, которые мы спроектировали, собрали и запустили. Выберите категорию, чтобы отфильтровать.",
+    "works.empty": "Скоро здесь появятся проекты.",
+    "works.emptyCategory": "В этой категории пока нет работ.",
+    "card.details": "Подробнее",
+    "card.review": "Отзыв",
+
+    // кейс работы
+    "case.leaveReview": "Оставить отзыв",
+    "case.wantSimilar": "Хочу похожий проект",
+    "case.challenge": "Задача",
+    "case.solution": "Решение",
+    "case.result": "Результат",
+    "case.services": "Услуги",
+    "case.reviewsAbout": "Отзывы об этой работе",
+    "case.ctaTitle": "Хотите такой же результат?",
+    "case.notFound": "Работа не найдена",
+
+    // страница отзывов
+    "reviews.title": "Отзывы клиентов",
+    "reviews.subtitle":
+      "Все отзывы проходят модерацию — публикуются только реальные.",
+    "reviews.leave": "+ Оставить отзыв",
+    "reviews.avg": "средняя оценка",
+    "reviews.count": "опубликованных отзывов",
+    "reviews.note": "Каждый отзыв проверяется модератором перед публикацией.",
+    "reviews.empty": "Пока нет опубликованных отзывов — станьте первым.",
+
+    // contact + форма заявки
+    "contact.title": "Обсудить проект",
+    "contact.subtitle":
+      "Заполните короткую форму — обсудим задачу, предложим решение и сроки. Регистрация не нужна, обязателен только контакт для связи.",
+    "lead.service": "Услуга",
+    "lead.budget": "Бюджет",
+    "lead.describe": "Опишите задачу",
+    "lead.describePlaceholder": "Коротко о проекте, целях и сроках",
+    "lead.name": "Имя",
+    "lead.namePlaceholder": "Как к вам обращаться",
+    "lead.contact": "Контакт",
+    "lead.contactPlaceholder": "Telegram, телефон или email",
+    "lead.send": "Отправить заявку",
+    "lead.sending": "Отправляем…",
+    "lead.errContact": "Укажите контакт для связи.",
+    "lead.errSend": "Не удалось отправить заявку. Попробуйте ещё раз.",
+    "lead.doneTitle": "Заявка отправлена",
+    "lead.doneText":
+      "Мы свяжемся с вами по указанному контакту в ближайшее время. Спасибо за интерес к Flystack!",
+    "lead.sendAnother": "Отправить ещё одну",
+    "select.placeholder": "Выберите…",
+    "svcOpt.landing": "Сайт-визитка",
+    "svcOpt.shop": "Интернет-магазин",
+    "svcOpt.promo": "Лендинг",
+    "svcOpt.corp": "Корпоративный сайт",
+    "svcOpt.bot": "Telegram-бот и Mini App",
+    "svcOpt.auto": "Автоматизация",
+    "svcOpt.other": "Другое",
+    "budget.lt100": "до 100 000 ₽",
+    "budget.100_300": "100–300 000 ₽",
+    "budget.300_700": "300–700 000 ₽",
+    "budget.gt700": "более 700 000 ₽",
+    "budget.unknown": "Пока не знаю",
+
+    // вход / регистрация
+    "login.welcome": "Добро пожаловать",
+    "login.subtitle": "Войдите, чтобы оставлять отзывы о работах студии.",
+    "auth.login": "Вход",
+    "auth.register": "Регистрация",
+    "auth.name": "Имя",
+    "auth.email": "Email",
+    "auth.password": "Пароль",
+    "auth.passwordHint":
+      "Минимум 8 символов. После регистрации подтвердите почту по ссылке из письма, чтобы оставлять отзывы.",
+    "auth.wait": "Подождите…",
+    "auth.loginBtn": "Войти",
+    "auth.registerBtn": "Зарегистрироваться",
+    "auth.or": "или",
+    "auth.google": "Продолжить с Google",
+    "auth.telegramSoon": "Telegram (скоро)",
+    "auth.err401": "Неверный email или пароль.",
+    "auth.err409": "Этот email уже зарегистрирован.",
+    "auth.err403": "Аккаунт заблокирован.",
+    "auth.err400": "Проверьте корректность данных.",
+    "auth.errLogin": "Не удалось войти. Попробуйте ещё раз.",
+    "auth.errRegister": "Не удалось зарегистрироваться. Попробуйте ещё раз.",
+
+    // кабинет
+    "me.title": "Личный кабинет",
+    "me.loading": "Загружаем кабинет…",
+    "me.verifyBanner":
+      "Подтвердите почту по ссылке из письма — до этого оставлять отзывы нельзя.",
+    "me.verifySent": "Письмо отправлено — проверьте почту.",
+    "me.resend": "Отправить письмо повторно",
+    "me.resending": "Отправляем…",
+    "me.resendError": "Не вышло — повторить",
+    "me.total": "Всего",
+    "me.pending": "На модерации",
+    "me.approved": "Опубликовано",
+    "me.myReviews": "Мои отзывы",
+    "me.leaveReview": "+ Оставить отзыв",
+    "me.empty": "У вас пока нет отзывов. Расскажите о работе, которая вам понравилась.",
+    "me.leaveFirst": "Оставить первый отзыв",
+    "me.ratingShort": "оценка",
+    "status.pending": "На модерации",
+    "status.approved": "Опубликован",
+    "status.rejected": "Отклонён",
+
+    // форма отзыва
+    "new.title": "Оставить отзыв",
+    "new.subtitle": "Отзыв появится на сайте после модерации администратором.",
+    "new.loading": "Загружаем…",
+    "new.verifyTitle": "Сначала подтвердите почту",
+    "new.verifyText":
+      "Оставлять отзывы можно только с подтверждённой почтой. Проверьте письмо со ссылкой подтверждения.",
+    "new.toCabinet": "В кабинет",
+    "new.work": "Работа",
+    "new.selectWork": "— выберите работу —",
+    "new.rating": "Оценка",
+    "new.role": "Кем вы являетесь",
+    "new.rolePlaceholder": "Напр. основатель компании, маркетолог",
+    "new.text": "Текст отзыва",
+    "new.textPlaceholder": "Что понравилось в работе со студией (минимум 10 символов)",
+    "new.submit": "Отправить на модерацию",
+    "new.submitting": "Отправляем…",
+    "new.errWork": "Выберите работу.",
+    "new.errRating": "Поставьте оценку.",
+    "new.errText": "Текст отзыва — минимум 10 символов.",
+    "new.err403": "Подтвердите почту, прежде чем оставлять отзывы.",
+    "new.err404": "Работа не найдена.",
+    "new.errGeneric": "Не удалось отправить отзыв.",
+
+    // OAuth-колбэк
+    "cb.failTitle": "Не удалось войти",
+    "cb.failText": "Ссылка авторизации недействительна. Попробуйте ещё раз.",
+    "cb.toLogin": "На страницу входа",
+    "cb.finishing": "Завершаем вход…",
+
+    // подтверждение почты
+    "ve.verifying": "Подтверждаем почту…",
+    "ve.successTitle": "Почта подтверждена",
+    "ve.successText":
+      "Теперь вы можете оставлять отзывы и пользоваться всеми возможностями.",
+    "ve.toCabinet": "В личный кабинет",
+    "ve.expiredTitle": "Ссылка недействительна",
+    "ve.expiredText":
+      "Срок действия ссылки истёк или она уже была использована. Войдите и запросите подтверждение повторно.",
+    "ve.failTitle": "Не удалось подтвердить почту",
+    "ve.missingText":
+      "В ссылке нет токена подтверждения. Откройте ссылку из письма целиком.",
+    "ve.invalidText": "Ссылка повреждена. Попробуйте открыть её из письма ещё раз.",
+    "ve.toLogin": "На страницу входа",
+
+    // админка — общий чром
+    "admin.panel": "Админ-панель",
+    "admin.checking": "Проверка доступа…",
+    "admin.loading": "Загрузка…",
+    "admin.nav.overview": "Обзор",
+    "admin.nav.reviews": "Модерация отзывов",
+    "admin.nav.works": "Работы",
+    "admin.nav.leads": "Заявки",
+    "admin.nav.users": "Пользователи",
+    "admin.nav.content": "Контент",
+    // админка — дашборд
+    "admin.overview": "Обзор",
+    "admin.card.pending": "Ждут модерации",
+    "admin.card.published": "Опубликовано",
+    "admin.card.works": "Работ",
+    "admin.card.totalReviews": "Всего отзывов",
+    "admin.pendingTitle": "Ждут модерации",
+    "admin.allReviews": "Все отзывы →",
+    "admin.noPending": "Нет отзывов на модерации.",
+    "admin.recentWorks": "Последние работы",
+    "admin.allWorks": "Все работы →",
+    "admin.noWorks": "Работ пока нет.",
+    "admin.publish": "Опубликовать",
+    "admin.reject": "Отклонить",
+    "admin.published": "опубликовано",
+    "admin.draft": "черновик",
+    // админка — отзывы
+    "admin.reviewsTitle": "Модерация отзывов",
+    "admin.tab.pending": "Ожидают",
+    "admin.tab.approved": "Опубликованные",
+    "admin.tab.rejected": "Отклонённые",
+    "admin.empty": "Здесь пусто.",
+    "admin.publishAnyway": "Всё же опубликовать",
+    "admin.unpublish": "Снять с публикации",
+    // админка — работы
+    "admin.worksTitle": "Работы портфолио",
+    "admin.addWork": "+ Добавить работу",
+    "admin.noWorksYet": "Работ пока нет.",
+    "admin.edit": "Изменить",
+    "admin.delete": "Удалить",
+    "admin.deleteConfirm": "Удалить работу безвозвратно?",
+    // админка — форма работы
+    "wf.editTitle": "Редактирование работы",
+    "wf.newTitle": "Новая работа",
+    "wf.category": "Категория *",
+    "wf.year": "Год",
+    "wf.sort": "Порядок (sort)",
+    "wf.cover": "URL обложки",
+    "wf.tagline": "Тэглайн",
+    "wf.name": "Название *",
+    "wf.subtitle": "Подзаголовок",
+    "wf.challenge": "Задача",
+    "wf.solution": "Решение",
+    "wf.result": "Результат",
+    "wf.services": "Услуги (через запятую)",
+    "wf.gallery": "Галерея — URL через запятую",
+    "wf.metrics": "Метрики (JSON-массив)",
+    "wf.publishedField": "Опубликовано",
+    "wf.save": "Сохранить",
+    "wf.saving": "Сохраняем…",
+    "wf.cancel": "Отмена",
+    "wf.errTitle": "Укажите название хотя бы на одном языке.",
+    "wf.errMetrics": "Метрики должны быть валидным JSON.",
+    "wf.errSlug": "Работа с таким slug уже существует.",
+    "wf.errSave": "Не удалось сохранить работу.",
+    // админка — заявки
+    "admin.leadsTitle": "Заявки",
+    "admin.noLeads": "Заявок пока нет.",
+    "admin.noName": "Без имени",
+    "admin.leadBudget": "бюджет",
+    "lead.status.new": "Новая",
+    "lead.status.in_progress": "В работе",
+    "lead.status.done": "Завершена",
+    // админка — пользователи
+    "admin.usersTitle": "Пользователи",
+    "admin.blocked": "заблокирован",
+    "admin.account": "аккаунт",
+    "admin.makeAdmin": "Сделать админом",
+    "admin.removeAdmin": "Снять админа",
+    "admin.block": "Заблокировать",
+    "admin.unblock": "Разблокировать",
+    // админка — контент
+    "admin.contentTitle": "Контент сайта",
+    "admin.contentAdd": "Добавить / перезаписать ключ",
+    "admin.contentKeyPlaceholder": "ключ (напр. hero)",
+    "admin.contentNone": "Для выбранной локали контента нет.",
+    "admin.contentSaved": "Сохранено",
+    "admin.contentBadJson": "значение должно быть валидным JSON.",
+    "admin.contentFieldName": "имя поля (напр. title)",
+    "admin.contentTextPlaceholder": "текст",
+    "admin.contentAddField": "+ Добавить поле",
+    "admin.contentRemoveField": "Удалить поле",
+    "admin.contentRawHint": "Сложное значение — редактируется как JSON.",
+    "admin.contentNoFields": "Полей нет — добавьте первое.",
+    "admin.save": "Сохранить",
+  },
+  en: {
+    "nav.home": "Home",
+    "nav.works": "Work",
+    "nav.reviews": "Reviews",
+    "nav.discuss": "Start a project",
+    "nav.login": "Sign in",
+    "nav.account": "Account",
+    "nav.admin": "Admin",
+    "nav.logout": "Sign out",
+    "common.all": "All",
+    "common.viewWork": "View our work",
+    "footer.tagline": "Digital product studio",
+
+    "home.kicker": "Digital product studio",
+    "home.heroTitle": "We build websites and services that",
+    "home.heroTitleAccent": "drive real results",
+    "home.heroSubtitle":
+      "Landing pages, stores, promo sites, Telegram bots and automation — end-to-end, with clear timelines and real client reviews.",
+    "home.servicesTitle": "What we do",
+    "home.recentProjects": "Recent projects",
+    "home.allWorks": "All work →",
+    "home.clientsSay": "What clients say",
+    "home.allReviews": "All reviews →",
+    "home.noProjects": "Projects will appear here soon.",
+    "home.noReviews": "No published reviews yet — be the first.",
+    "home.finalTitle": "Got a project in mind?",
+    "home.finalSubtitle":
+      "Tell us the task — we'll suggest a solution and timeline. No obligations.",
+    "stats.projects": "projects",
+    "stats.rating": "average rating",
+    "stats.term": "time to launch",
+    "stats.termValue": "from 2 weeks",
+
+    "svc.landing.title": "Business-card site",
+    "svc.landing.desc": "A presentation of your business that builds trust.",
+    "svc.shop.title": "Online store",
+    "svc.shop.desc": "Catalog, cart, checkout and a handy admin panel.",
+    "svc.promo.title": "Landing page",
+    "svc.promo.desc": "A conversion page for a product or campaign.",
+    "svc.corp.title": "Corporate website",
+    "svc.corp.desc": "A multi-page company site with content.",
+    "svc.bot.title": "Telegram bot & Mini App",
+    "svc.bot.desc": "Bots and mini-apps inside Telegram.",
+    "svc.auto.title": "Automation",
+    "svc.auto.desc": "We connect services and remove routine work.",
+
+    "works.title": "Work",
+    "works.subtitle":
+      "Projects we designed, built and launched. Pick a category to filter.",
+    "works.empty": "Projects will appear here soon.",
+    "works.emptyCategory": "No work in this category yet.",
+    "card.details": "Details",
+    "card.review": "Review",
+
+    "case.leaveReview": "Leave a review",
+    "case.wantSimilar": "I want a similar project",
+    "case.challenge": "Challenge",
+    "case.solution": "Solution",
+    "case.result": "Result",
+    "case.services": "Services",
+    "case.reviewsAbout": "Reviews about this project",
+    "case.ctaTitle": "Want the same result?",
+    "case.notFound": "Project not found",
+
+    "reviews.title": "Client reviews",
+    "reviews.subtitle":
+      "Every review is moderated — only genuine ones get published.",
+    "reviews.leave": "+ Leave a review",
+    "reviews.avg": "average rating",
+    "reviews.count": "published reviews",
+    "reviews.note": "Every review is checked by a moderator before publishing.",
+    "reviews.empty": "No published reviews yet — be the first.",
+
+    "contact.title": "Start a project",
+    "contact.subtitle":
+      "Fill in a short form — we'll discuss the task and suggest a solution and timeline. No sign-up needed, only a contact is required.",
+    "lead.service": "Service",
+    "lead.budget": "Budget",
+    "lead.describe": "Describe your task",
+    "lead.describePlaceholder": "Briefly about the project, goals and timeline",
+    "lead.name": "Name",
+    "lead.namePlaceholder": "What should we call you",
+    "lead.contact": "Contact",
+    "lead.contactPlaceholder": "Telegram, phone or email",
+    "lead.send": "Send request",
+    "lead.sending": "Sending…",
+    "lead.errContact": "Please provide a contact.",
+    "lead.errSend": "Could not send the request. Please try again.",
+    "lead.doneTitle": "Request sent",
+    "lead.doneText":
+      "We'll get in touch via the contact you provided shortly. Thanks for your interest in Flystack!",
+    "lead.sendAnother": "Send another",
+    "select.placeholder": "Select…",
+    "svcOpt.landing": "Business-card site",
+    "svcOpt.shop": "Online store",
+    "svcOpt.promo": "Landing page",
+    "svcOpt.corp": "Corporate website",
+    "svcOpt.bot": "Telegram bot & Mini App",
+    "svcOpt.auto": "Automation",
+    "svcOpt.other": "Other",
+    "budget.lt100": "under $1,000",
+    "budget.100_300": "$1,000–3,000",
+    "budget.300_700": "$3,000–7,000",
+    "budget.gt700": "over $7,000",
+    "budget.unknown": "Not sure yet",
+
+    "login.welcome": "Welcome",
+    "login.subtitle": "Sign in to leave reviews about the studio's work.",
+    "auth.login": "Sign in",
+    "auth.register": "Sign up",
+    "auth.name": "Name",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.passwordHint":
+      "At least 8 characters. After signing up, confirm your email via the link to leave reviews.",
+    "auth.wait": "Please wait…",
+    "auth.loginBtn": "Sign in",
+    "auth.registerBtn": "Sign up",
+    "auth.or": "or",
+    "auth.google": "Continue with Google",
+    "auth.telegramSoon": "Telegram (soon)",
+    "auth.err401": "Wrong email or password.",
+    "auth.err409": "This email is already registered.",
+    "auth.err403": "Account is blocked.",
+    "auth.err400": "Please check your details.",
+    "auth.errLogin": "Could not sign in. Please try again.",
+    "auth.errRegister": "Could not sign up. Please try again.",
+
+    "me.title": "Account",
+    "me.loading": "Loading your account…",
+    "me.verifyBanner":
+      "Confirm your email via the link — until then you can't leave reviews.",
+    "me.verifySent": "Email sent — check your inbox.",
+    "me.resend": "Resend the email",
+    "me.resending": "Sending…",
+    "me.resendError": "Failed — retry",
+    "me.total": "Total",
+    "me.pending": "In moderation",
+    "me.approved": "Published",
+    "me.myReviews": "My reviews",
+    "me.leaveReview": "+ Leave a review",
+    "me.empty": "You have no reviews yet. Tell us about work you liked.",
+    "me.leaveFirst": "Leave your first review",
+    "me.ratingShort": "rating",
+    "status.pending": "In moderation",
+    "status.approved": "Published",
+    "status.rejected": "Rejected",
+
+    "new.title": "Leave a review",
+    "new.subtitle": "The review will appear on the site after moderation.",
+    "new.loading": "Loading…",
+    "new.verifyTitle": "Confirm your email first",
+    "new.verifyText":
+      "Reviews can only be left with a confirmed email. Check the email with the confirmation link.",
+    "new.toCabinet": "To account",
+    "new.work": "Project",
+    "new.selectWork": "— select a project —",
+    "new.rating": "Rating",
+    "new.role": "Who you are",
+    "new.rolePlaceholder": "e.g. company founder, marketer",
+    "new.text": "Review text",
+    "new.textPlaceholder": "What you liked about working with the studio (min 10 chars)",
+    "new.submit": "Submit for moderation",
+    "new.submitting": "Sending…",
+    "new.errWork": "Select a project.",
+    "new.errRating": "Give a rating.",
+    "new.errText": "Review text must be at least 10 characters.",
+    "new.err403": "Confirm your email before leaving reviews.",
+    "new.err404": "Project not found.",
+    "new.errGeneric": "Could not submit the review.",
+
+    "cb.failTitle": "Could not sign in",
+    "cb.failText": "The authorization link is invalid. Please try again.",
+    "cb.toLogin": "To sign in",
+    "cb.finishing": "Finishing sign-in…",
+
+    "ve.verifying": "Confirming your email…",
+    "ve.successTitle": "Email confirmed",
+    "ve.successText":
+      "You can now leave reviews and use all features.",
+    "ve.toCabinet": "To account",
+    "ve.expiredTitle": "Link is invalid",
+    "ve.expiredText":
+      "The link has expired or was already used. Sign in and request confirmation again.",
+    "ve.failTitle": "Could not confirm email",
+    "ve.missingText":
+      "The link has no confirmation token. Open the full link from the email.",
+    "ve.invalidText": "The link is broken. Try opening it from the email again.",
+    "ve.toLogin": "To sign in",
+
+    "admin.panel": "Admin panel",
+    "admin.checking": "Checking access…",
+    "admin.loading": "Loading…",
+    "admin.nav.overview": "Overview",
+    "admin.nav.reviews": "Review moderation",
+    "admin.nav.works": "Work",
+    "admin.nav.leads": "Requests",
+    "admin.nav.users": "Users",
+    "admin.nav.content": "Content",
+    "admin.overview": "Overview",
+    "admin.card.pending": "Awaiting moderation",
+    "admin.card.published": "Published",
+    "admin.card.works": "Projects",
+    "admin.card.totalReviews": "Total reviews",
+    "admin.pendingTitle": "Awaiting moderation",
+    "admin.allReviews": "All reviews →",
+    "admin.noPending": "No reviews awaiting moderation.",
+    "admin.recentWorks": "Recent work",
+    "admin.allWorks": "All work →",
+    "admin.noWorks": "No projects yet.",
+    "admin.publish": "Publish",
+    "admin.reject": "Reject",
+    "admin.published": "published",
+    "admin.draft": "draft",
+    "admin.reviewsTitle": "Review moderation",
+    "admin.tab.pending": "Pending",
+    "admin.tab.approved": "Published",
+    "admin.tab.rejected": "Rejected",
+    "admin.empty": "Nothing here.",
+    "admin.publishAnyway": "Publish anyway",
+    "admin.unpublish": "Unpublish",
+    "admin.worksTitle": "Portfolio work",
+    "admin.addWork": "+ Add project",
+    "admin.noWorksYet": "No projects yet.",
+    "admin.edit": "Edit",
+    "admin.delete": "Delete",
+    "admin.deleteConfirm": "Delete this project permanently?",
+    "wf.editTitle": "Edit project",
+    "wf.newTitle": "New project",
+    "wf.category": "Category *",
+    "wf.year": "Year",
+    "wf.sort": "Order (sort)",
+    "wf.cover": "Cover URL",
+    "wf.tagline": "Tagline",
+    "wf.name": "Title *",
+    "wf.subtitle": "Subtitle",
+    "wf.challenge": "Challenge",
+    "wf.solution": "Solution",
+    "wf.result": "Result",
+    "wf.services": "Services (comma-separated)",
+    "wf.gallery": "Gallery — URLs comma-separated",
+    "wf.metrics": "Metrics (JSON array)",
+    "wf.publishedField": "Published",
+    "wf.save": "Save",
+    "wf.saving": "Saving…",
+    "wf.cancel": "Cancel",
+    "wf.errTitle": "Provide a title in at least one language.",
+    "wf.errMetrics": "Metrics must be valid JSON.",
+    "wf.errSlug": "A project with this slug already exists.",
+    "wf.errSave": "Could not save the project.",
+    "admin.leadsTitle": "Requests",
+    "admin.noLeads": "No requests yet.",
+    "admin.noName": "No name",
+    "admin.leadBudget": "budget",
+    "lead.status.new": "New",
+    "lead.status.in_progress": "In progress",
+    "lead.status.done": "Done",
+    "admin.usersTitle": "Users",
+    "admin.blocked": "blocked",
+    "admin.account": "account",
+    "admin.makeAdmin": "Make admin",
+    "admin.removeAdmin": "Remove admin",
+    "admin.block": "Block",
+    "admin.unblock": "Unblock",
+    "admin.contentTitle": "Site content",
+    "admin.contentAdd": "Add / overwrite key",
+    "admin.contentKeyPlaceholder": "key (e.g. hero)",
+    "admin.contentNone": "No content for the selected locale.",
+    "admin.contentSaved": "Saved",
+    "admin.contentBadJson": "value must be valid JSON.",
+    "admin.contentFieldName": "field name (e.g. title)",
+    "admin.contentTextPlaceholder": "text",
+    "admin.contentAddField": "+ Add field",
+    "admin.contentRemoveField": "Remove field",
+    "admin.contentRawHint": "Complex value — edited as JSON.",
+    "admin.contentNoFields": "No fields — add the first one.",
+    "admin.save": "Save",
+  },
+};
+
+export type TKey = string;
+
+// t возвращает перевод ключа для локали (откат на ru, затем на сам ключ).
+export function t(locale: Locale, key: TKey): string {
+  return dict[locale]?.[key] ?? dict.ru[key] ?? key;
+}

@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { Lead } from "@/lib/types";
 
 const statusOptions: Lead["status"][] = ["new", "in_progress", "done"];
-const statusLabel: Record<Lead["status"], string> = {
-  new: "Новая",
-  in_progress: "В работе",
-  done: "Завершена",
-};
 
 export default function AdminLeadsPage() {
+  const { locale } = useLocale();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,12 +31,12 @@ export default function AdminLeadsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Заявки</h1>
+      <h1 className="text-2xl font-bold">{t(locale, "admin.leadsTitle")}</h1>
 
       {loading ? (
-        <p className="mt-8 text-muted">Загрузка…</p>
+        <p className="mt-8 text-muted">{t(locale, "admin.loading")}</p>
       ) : leads.length === 0 ? (
-        <p className="mt-8 text-muted">Заявок пока нет.</p>
+        <p className="mt-8 text-muted">{t(locale, "admin.noLeads")}</p>
       ) : (
         <div className="mt-6 space-y-3">
           {leads.map((l) => (
@@ -49,12 +47,14 @@ export default function AdminLeadsPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="font-semibold">
-                    {l.name || "Без имени"} ·{" "}
+                    {l.name || t(locale, "admin.noName")} ·{" "}
                     <span className="text-primary">{l.contact}</span>
                   </div>
                   <div className="text-xs text-muted">
-                    {l.service || "—"} · бюджет: {l.budget || "—"} ·{" "}
-                    {new Date(l.created_at).toLocaleString("ru-RU")}
+                    {l.service || "—"} · {t(locale, "admin.leadBudget")}: {l.budget || "—"} ·{" "}
+                    {new Date(l.created_at).toLocaleString(
+                      locale === "en" ? "en-US" : "ru-RU",
+                    )}
                   </div>
                 </div>
                 <select
@@ -66,7 +66,7 @@ export default function AdminLeadsPage() {
                 >
                   {statusOptions.map((s) => (
                     <option key={s} value={s}>
-                      {statusLabel[s]}
+                      {t(locale, `lead.status.${s}`)}
                     </option>
                   ))}
                 </select>

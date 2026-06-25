@@ -8,6 +8,12 @@ import { getAccessToken } from "./auth";
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
+// Добавляет ?locale= к пути API (учитывает уже имеющийся query).
+export function localePath(path: string, locale: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}locale=${locale}`;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {

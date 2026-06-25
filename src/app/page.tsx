@@ -1,33 +1,36 @@
 import Link from "next/link";
-import { apiGetSafe } from "@/lib/api";
+import { apiGetSafe, localePath } from "@/lib/api";
 import type { ReviewsFeed, Work } from "@/lib/types";
+import { t } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/locale-server";
 import { WorkCard } from "@/components/WorkCard";
 import { ReviewCard } from "@/components/ReviewCard";
-
-const services = [
-  { title: "Сайт-визитка", desc: "Презентация бизнеса, которая вызывает доверие." },
-  { title: "Интернет-магазин", desc: "Каталог, корзина, оплата и удобная админка." },
-  { title: "Лендинг", desc: "Конверсионная страница под продукт или акцию." },
-  { title: "Корпоративный сайт", desc: "Многостраничный сайт компании с контентом." },
-  { title: "Telegram-бот и Mini App", desc: "Боты и мини-приложения внутри Telegram." },
-  { title: "Автоматизация", desc: "Связываем сервисы и убираем рутину." },
-];
-
-const stats = [
-  { value: "50+", label: "проектов" },
-  { value: "4.9", label: "средняя оценка" },
-  { value: "от 2 нед.", label: "срок запуска" },
-];
 
 // Данные тянутся из API в рантайме, а не на сборке (API недоступен при build).
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const works = await apiGetSafe<Work[]>("/works", []);
-  const feed = await apiGetSafe<ReviewsFeed>("/reviews", {
+  const locale = await getServerLocale();
+  const works = await apiGetSafe<Work[]>(localePath("/works", locale), []);
+  const feed = await apiGetSafe<ReviewsFeed>(localePath("/reviews", locale), {
     reviews: [],
     summary: { average: 0, count: 0 },
   });
+
+  const services = [
+    { title: t(locale, "svc.landing.title"), desc: t(locale, "svc.landing.desc") },
+    { title: t(locale, "svc.shop.title"), desc: t(locale, "svc.shop.desc") },
+    { title: t(locale, "svc.promo.title"), desc: t(locale, "svc.promo.desc") },
+    { title: t(locale, "svc.corp.title"), desc: t(locale, "svc.corp.desc") },
+    { title: t(locale, "svc.bot.title"), desc: t(locale, "svc.bot.desc") },
+    { title: t(locale, "svc.auto.title"), desc: t(locale, "svc.auto.desc") },
+  ];
+
+  const stats = [
+    { value: "50+", label: t(locale, "stats.projects") },
+    { value: "4.9", label: t(locale, "stats.rating") },
+    { value: t(locale, "stats.termValue"), label: t(locale, "stats.term") },
+  ];
 
   const recentWorks = works.slice(0, 3);
   const recentReviews = feed.reviews.slice(0, 3);
@@ -38,15 +41,16 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-12 sm:pt-24">
         <div className="frost max-w-3xl p-6 sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Студия цифровых продуктов
+            {t(locale, "home.kicker")}
           </p>
           <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-6xl">
-            Создаём сайты и сервисы, которые{" "}
-            <span className="text-primary">работают на результат</span>
+            {t(locale, "home.heroTitle")}{" "}
+            <span className="text-primary">
+              {t(locale, "home.heroTitleAccent")}
+            </span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted">
-            Сайты-визитки, магазины, лендинги, Telegram-боты и автоматизация —
-            под ключ, с понятными сроками и реальными отзывами клиентов.
+            {t(locale, "home.heroSubtitle")}
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -54,13 +58,13 @@ export default async function HomePage() {
               href="/contact"
               className="rounded-full bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-dark"
             >
-              Обсудить проект
+              {t(locale, "nav.discuss")}
             </Link>
             <Link
               href="/works"
               className="rounded-full bg-white px-6 py-3 font-semibold text-ink ring-1 ring-black/10 transition-colors hover:ring-primary/40"
             >
-              Посмотреть работы
+              {t(locale, "common.viewWork")}
             </Link>
           </div>
 
@@ -78,7 +82,7 @@ export default async function HomePage() {
       {/* Услуги */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
-          Что мы делаем
+          {t(locale, "home.servicesTitle")}
         </h2>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s) => (
@@ -97,20 +101,20 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="flex items-end justify-between">
           <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
-            Недавние проекты
+            {t(locale, "home.recentProjects")}
           </h2>
           <Link href="/works" className="text-sm font-medium text-primary hover:underline">
-            Все работы →
+            {t(locale, "home.allWorks")}
           </Link>
         </div>
         {recentWorks.length > 0 ? (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {recentWorks.map((w) => (
-              <WorkCard key={w.id} work={w} />
+              <WorkCard key={w.id} work={w} locale={locale} />
             ))}
           </div>
         ) : (
-          <p className="mt-8 text-muted">Скоро здесь появятся проекты.</p>
+          <p className="mt-8 text-muted">{t(locale, "home.noProjects")}</p>
         )}
       </section>
 
@@ -118,10 +122,10 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="flex items-end justify-between">
           <h2 className="inline-block frost text-2xl font-bold sm:text-3xl">
-            Что говорят клиенты
+            {t(locale, "home.clientsSay")}
           </h2>
           <Link href="/reviews" className="text-sm font-medium text-primary hover:underline">
-            Все отзывы →
+            {t(locale, "home.allReviews")}
           </Link>
         </div>
         {recentReviews.length > 0 ? (
@@ -131,24 +135,24 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <p className="mt-8 text-muted">
-            Пока нет опубликованных отзывов — станьте первым.
-          </p>
+          <p className="mt-8 text-muted">{t(locale, "home.noReviews")}</p>
         )}
       </section>
 
       {/* Финальный CTA */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="rounded-[var(--radius-card)] bg-ink px-8 py-12 text-center text-white sm:py-16">
-          <h2 className="text-2xl font-bold sm:text-3xl">Есть идея проекта?</h2>
+          <h2 className="text-2xl font-bold sm:text-3xl">
+            {t(locale, "home.finalTitle")}
+          </h2>
           <p className="mx-auto mt-3 max-w-md text-white/70">
-            Расскажите задачу — предложим решение и сроки. Без обязательств.
+            {t(locale, "home.finalSubtitle")}
           </p>
           <Link
             href="/contact"
             className="mt-7 inline-block rounded-full bg-accent px-7 py-3 font-semibold text-ink transition-transform hover:scale-105"
           >
-            Обсудить проект
+            {t(locale, "nav.discuss")}
           </Link>
         </div>
       </section>

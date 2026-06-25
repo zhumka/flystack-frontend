@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { User } from "@/lib/types";
 
 export default function AdminUsersPage() {
+  const { locale } = useLocale();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,10 +29,10 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Пользователи</h1>
+      <h1 className="text-2xl font-bold">{t(locale, "admin.usersTitle")}</h1>
 
       {loading ? (
-        <p className="mt-8 text-muted">Загрузка…</p>
+        <p className="mt-8 text-muted">{t(locale, "admin.loading")}</p>
       ) : (
         <div className="mt-6 space-y-2">
           {users.map((u) => (
@@ -42,12 +45,12 @@ export default function AdminUsersPage() {
                   {u.name || "—"}{" "}
                   {!u.is_active && (
                     <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
-                      заблокирован
+                      {t(locale, "admin.blocked")}
                     </span>
                   )}
                 </div>
                 <div className="text-xs text-muted">
-                  {u.email ?? `${u.auth_provider}-аккаунт`} · {u.role}
+                  {u.email ?? `${u.auth_provider}-${t(locale, "admin.account")}`} · {u.role}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -57,7 +60,7 @@ export default function AdminUsersPage() {
                   }
                   className="rounded-full bg-white px-3 py-1.5 text-xs font-medium ring-1 ring-black/10 hover:ring-primary/40"
                 >
-                  {u.role === "admin" ? "Снять админа" : "Сделать админом"}
+                  {u.role === "admin" ? t(locale, "admin.removeAdmin") : t(locale, "admin.makeAdmin")}
                 </button>
                 <button
                   onClick={() => patch(u.id, { is_active: !u.is_active })}
@@ -67,7 +70,7 @@ export default function AdminUsersPage() {
                       : "bg-white text-green-700 ring-green-200 hover:bg-green-50"
                   }`}
                 >
-                  {u.is_active ? "Заблокировать" : "Разблокировать"}
+                  {u.is_active ? t(locale, "admin.block") : t(locale, "admin.unblock")}
                 </button>
               </div>
             </div>

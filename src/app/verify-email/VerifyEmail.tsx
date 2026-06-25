@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ApiError, apiRequest } from "@/lib/api";
 import { updateStoredUser } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 
 type Status = "verifying" | "success" | "expired" | "invalid" | "missing";
 
 // Бэкенд присылает письмо со ссылкой на фронтенд:
 // /verify-email?token=...  Здесь дёргаем POST /auth/verify-email { token }.
 export function VerifyEmail() {
+  const { locale } = useLocale();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<Status>(token ? "verifying" : "missing");
@@ -44,53 +47,48 @@ export function VerifyEmail() {
   return (
     <section className="mx-auto max-w-md px-4 py-24 text-center">
       {status === "verifying" && (
-        <p className="text-muted">Подтверждаем почту…</p>
+        <p className="text-muted">{t(locale, "ve.verifying")}</p>
       )}
 
       {status === "success" && (
         <>
-          <h1 className="text-2xl font-bold">Почта подтверждена</h1>
-          <p className="mt-2 text-muted">
-            Теперь вы можете оставлять отзывы и пользоваться всеми возможностями.
-          </p>
+          <h1 className="text-2xl font-bold">{t(locale, "ve.successTitle")}</h1>
+          <p className="mt-2 text-muted">{t(locale, "ve.successText")}</p>
           <Link
             href="/me"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
           >
-            В личный кабинет
+            {t(locale, "ve.toCabinet")}
           </Link>
         </>
       )}
 
       {status === "expired" && (
         <>
-          <h1 className="text-2xl font-bold">Ссылка недействительна</h1>
-          <p className="mt-2 text-muted">
-            Срок действия ссылки истёк или она уже была использована. Войдите и
-            запросите подтверждение повторно.
-          </p>
+          <h1 className="text-2xl font-bold">{t(locale, "ve.expiredTitle")}</h1>
+          <p className="mt-2 text-muted">{t(locale, "ve.expiredText")}</p>
           <Link
             href="/login"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
           >
-            На страницу входа
+            {t(locale, "ve.toLogin")}
           </Link>
         </>
       )}
 
       {(status === "invalid" || status === "missing") && (
         <>
-          <h1 className="text-2xl font-bold">Не удалось подтвердить почту</h1>
+          <h1 className="text-2xl font-bold">{t(locale, "ve.failTitle")}</h1>
           <p className="mt-2 text-muted">
             {status === "missing"
-              ? "В ссылке нет токена подтверждения. Откройте ссылку из письма целиком."
-              : "Ссылка повреждена. Попробуйте открыть её из письма ещё раз."}
+              ? t(locale, "ve.missingText")
+              : t(locale, "ve.invalidText")}
           </p>
           <Link
             href="/login"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
           >
-            На страницу входа
+            {t(locale, "ve.toLogin")}
           </Link>
         </>
       )}

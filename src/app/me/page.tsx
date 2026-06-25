@@ -3,35 +3,35 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiError, apiRequest } from "@/lib/api";
+import { ApiError, apiRequest, localePath } from "@/lib/api";
 import { clearAuth, getAccessToken, getStoredUser } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { MyReviews, ReviewItem, User } from "@/lib/types";
 
-const statusMeta: Record<
-  ReviewItem["status"],
-  { label: string; cls: string }
-> = {
-  pending: { label: "На модерации", cls: "bg-amber-100 text-amber-700" },
-  approved: { label: "Опубликован", cls: "bg-green-100 text-green-700" },
-  rejected: { label: "Отклонён", cls: "bg-red-100 text-red-700" },
+const statusCls: Record<ReviewItem["status"], string> = {
+  pending: "bg-amber-100 text-amber-700",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 type ResendState = "idle" | "sending" | "sent" | "error";
 
 export default function CabinetPage() {
   const router = useRouter();
+  const { locale } = useLocale();
   const [user, setUser] = useState<User | null>(null);
   const [data, setData] = useState<MyReviews | null>(null);
   const [loading, setLoading] = useState(true);
   const [resend, setResend] = useState<ResendState>("idle");
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString(locale === "en" ? "en-US" : "ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
 
   async function resendVerification() {
     setResend("sending");
@@ -55,7 +55,10 @@ export default function CabinetPage() {
 
     (async () => {
       try {
-        const mine = await apiRequest<MyReviews>("/me/reviews", { auth: true });
+        const mine = await apiRequest<MyReviews>(
+          localePath("/me/reviews", locale),
+          { auth: true },
+        );
         setData(mine);
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
@@ -67,12 +70,12 @@ export default function CabinetPage() {
         setLoading(false);
       }
     })();
-  }, [router]);
+  }, [router, locale]);
 
   if (loading) {
     return (
       <section className="mx-auto max-w-4xl px-4 py-24 text-center text-muted">
-        Загружаем кабинет…
+        {t(locale, "me.loading")}
       </section>
     );
   }
@@ -87,7 +90,7 @@ export default function CabinetPage() {
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-16">
-      <h1 className="text-3xl font-bold sm:text-4xl">Личный кабинет</h1>
+      <h1 className="text-3xl font-bold sm:text-4xl">{t(locale, "me.title")}</h1>
       {user && (
         <p className="mt-2 text-muted">
           {user.name} · {user.email}
@@ -97,13 +100,10 @@ export default function CabinetPage() {
       {/* Напоминание о подтверждении почты (скрыто, если почта подтверждена) */}
       {user && !user.email_verified && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50 px-5 py-4 text-sm text-amber-800 ring-1 ring-amber-200">
-          <span>
-            Подтвердите почту по ссылке из письма — до этого оставлять отзывы
-            нельзя.
-          </span>
+          <span>{t(locale, "me.verifyBanner")}</span>
           {resend === "sent" ? (
             <span className="font-medium text-amber-900">
-              Письмо отправлено — проверьте почту.
+              {t(locale, "me.verifySent")}
             </span>
           ) : (
             <button
@@ -112,10 +112,10 @@ export default function CabinetPage() {
               className="shrink-0 rounded-full bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-700 disabled:opacity-60"
             >
               {resend === "sending"
-                ? "Отправляем…"
+                ? t(locale, "me.resending")
                 : resend === "error"
-                  ? "Не вышло — повторить"
-                  : "Отправить письмо повторно"}
+                  ? t(locale, "me.resendError")
+                  : t(locale, "me.resend")}
             </button>
           )}
         </div>
@@ -124,9 +124,9 @@ export default function CabinetPage() {
       {/* Счётчики */}
       <div className="mt-8 grid grid-cols-3 gap-4">
         {[
-          { label: "Всего", value: counts.total },
-          { label: "На модерации", value: counts.pending },
-          { label: "Опубликовано", value: counts.approved },
+          { label: t(locale, "me.total"), value: counts.total },
+          { label: t(locale, "me.pending"), value: counts.pending },
+          { label: t(locale, "me.approved"), value: counts.approved },
         ].map((c) => (
           <div
             key={c.label}
@@ -140,12 +140,12 @@ export default function CabinetPage() {
 
       {/* Список отзывов */}
       <div className="mt-10 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Мои отзывы</h2>
+        <h2 className="text-2xl font-bold">{t(locale, "me.myReviews")}</h2>
         <Link
           href="/reviews/new"
           className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark"
         >
-          + Оставить отзыв
+          {t(locale, "me.leaveReview")}
         </Link>
       </div>
 
@@ -162,13 +162,13 @@ export default function CabinetPage() {
                     {r.work.title}
                   </div>
                   <div className="mt-0.5 text-xs text-muted">
-                    {formatDate(r.created_at)} · оценка {r.rating}/5
+                    {formatDate(r.created_at)} · {t(locale, "me.ratingShort")} {r.rating}/5
                   </div>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusMeta[r.status].cls}`}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusCls[r.status]}`}
                 >
-                  {statusMeta[r.status].label}
+                  {t(locale, `status.${r.status}`)}
                 </span>
               </div>
               <p className="mt-3 text-sm leading-relaxed text-ink/90">
@@ -179,14 +179,12 @@ export default function CabinetPage() {
         </div>
       ) : (
         <div className="mt-6 rounded-[var(--radius-card)] bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
-          <p className="text-muted">
-            У вас пока нет отзывов. Расскажите о работе, которая вам понравилась.
-          </p>
+          <p className="text-muted">{t(locale, "me.empty")}</p>
           <Link
             href="/reviews/new"
             className="mt-5 inline-block rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
           >
-            Оставить первый отзыв
+            {t(locale, "me.leaveFirst")}
           </Link>
         </div>
       )}

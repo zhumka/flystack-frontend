@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiError, apiGetSafe, apiRequest } from "@/lib/api";
+import { ApiError, apiGetSafe, apiRequest, localePath } from "@/lib/api";
 import { clearAuth, getAccessToken, getStoredUser } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/LocaleProvider";
 import type { User, Work } from "@/lib/types";
 
 const inputClass =
@@ -12,6 +14,7 @@ const inputClass =
 
 export default function NewReviewPage() {
   const router = useRouter();
+  const { locale } = useLocale();
   const [user, setUser] = useState<User | null>(null);
   const [works, setWorks] = useState<Work[]>([]);
   const [ready, setReady] = useState(false);
@@ -32,22 +35,21 @@ export default function NewReviewPage() {
     setUser(getStoredUser());
 
     (async () => {
-      const list = await apiGetSafe<Work[]>("/works", []);
+      const list = await apiGetSafe<Work[]>(localePath("/works", locale), []);
       setWorks(list);
       const preset = new URLSearchParams(window.location.search).get("work");
       if (preset && list.some((w) => w.id === preset)) setWorkId(preset);
       setReady(true);
     })();
-  }, [router]);
+  }, [router, locale]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!workId) return setError("Выберите работу.");
-    if (rating < 1) return setError("Поставьте оценку.");
-    if (text.trim().length < 10)
-      return setError("Текст отзыва — минимум 10 символов.");
+    if (!workId) return setError(t(locale, "new.errWork"));
+    if (rating < 1) return setError(t(locale, "new.errRating"));
+    if (text.trim().length < 10) return setError(t(locale, "new.errText"));
 
     setSubmitting(true);
     try {
@@ -65,12 +67,11 @@ export default function NewReviewPage() {
           router.replace("/login");
           return;
         }
-        if (err.status === 403)
-          setError("Подтвердите почту, прежде чем оставлять отзывы.");
-        else if (err.status === 404) setError("Работа не найдена.");
-        else setError("Не удалось отправить отзыв.");
+        if (err.status === 403) setError(t(locale, "new.err403"));
+        else if (err.status === 404) setError(t(locale, "new.err404"));
+        else setError(t(locale, "new.errGeneric"));
       } else {
-        setError("Не удалось отправить отзыв.");
+        setError(t(locale, "new.errGeneric"));
       }
       setSubmitting(false);
     }
@@ -79,7 +80,7 @@ export default function NewReviewPage() {
   if (!ready) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-24 text-center text-muted">
-        Загружаем…
+        {t(locale, "new.loading")}
       </section>
     );
   }
@@ -88,16 +89,13 @@ export default function NewReviewPage() {
   if (user && !user.email_verified) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold">Сначала подтвердите почту</h1>
-        <p className="mt-3 text-muted">
-          Оставлять отзывы можно только с подтверждённой почтой. Проверьте
-          письмо со ссылкой подтверждения.
-        </p>
+        <h1 className="text-2xl font-bold">{t(locale, "new.verifyTitle")}</h1>
+        <p className="mt-3 text-muted">{t(locale, "new.verifyText")}</p>
         <Link
           href="/me"
           className="mt-6 inline-block rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark"
         >
-          В кабинет
+          {t(locale, "new.toCabinet")}
         </Link>
       </section>
     );
@@ -105,10 +103,8 @@ export default function NewReviewPage() {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-3xl font-bold sm:text-4xl">Оставить отзыв</h1>
-      <p className="mt-3 text-muted">
-        Отзыв появится на сайте после модерации администратором.
-      </p>
+      <h1 className="text-3xl font-bold sm:text-4xl">{t(locale, "new.title")}</h1>
+      <p className="mt-3 text-muted">{t(locale, "new.subtitle")}</p>
 
       <form
         onSubmit={handleSubmit}
@@ -116,13 +112,13 @@ export default function NewReviewPage() {
       >
         {/* Работа */}
         <label className="block">
-          <span className="text-sm font-medium">Работа</span>
+          <span className="text-sm font-medium">{t(locale, "new.work")}</span>
           <select
             value={workId}
             onChange={(e) => setWorkId(e.target.value)}
             className={`mt-1.5 ${inputClass} select-styled`}
           >
-            <option value="">— выберите работу —</option>
+            <option value="">{t(locale, "new.selectWork")}</option>
             {works.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.title}
@@ -133,7 +129,7 @@ export default function NewReviewPage() {
 
         {/* Оценка */}
         <div>
-          <span className="text-sm font-medium">Оценка</span>
+          <span className="text-sm font-medium">{t(locale, "new.rating")}</span>
           <div className="mt-1.5 flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -153,23 +149,23 @@ export default function NewReviewPage() {
 
         {/* Кто автор */}
         <label className="block">
-          <span className="text-sm font-medium">Кем вы являетесь</span>
+          <span className="text-sm font-medium">{t(locale, "new.role")}</span>
           <input
             value={roleText}
             onChange={(e) => setRoleText(e.target.value)}
-            placeholder="Напр. основатель компании, маркетолог"
+            placeholder={t(locale, "new.rolePlaceholder")}
             className={`mt-1.5 ${inputClass}`}
           />
         </label>
 
         {/* Текст */}
         <label className="block">
-          <span className="text-sm font-medium">Текст отзыва</span>
+          <span className="text-sm font-medium">{t(locale, "new.text")}</span>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={5}
-            placeholder="Что понравилось в работе со студией (минимум 10 символов)"
+            placeholder={t(locale, "new.textPlaceholder")}
             className={`mt-1.5 ${inputClass} resize-none`}
           />
         </label>
@@ -181,7 +177,7 @@ export default function NewReviewPage() {
           disabled={submitting}
           className="w-full rounded-full bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-dark disabled:opacity-60 sm:w-auto"
         >
-          {submitting ? "Отправляем…" : "Отправить на модерацию"}
+          {submitting ? t(locale, "new.submitting") : t(locale, "new.submit")}
         </button>
       </form>
     </section>
