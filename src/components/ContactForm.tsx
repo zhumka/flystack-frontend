@@ -21,18 +21,13 @@ export function ContactForm() {
     t(locale, "svcOpt.auto"),
     t(locale, "svcOpt.other"),
   ];
-  const budgetOptions = [
-    t(locale, "budget.lt100"),
-    t(locale, "budget.100_300"),
-    t(locale, "budget.300_700"),
-    t(locale, "budget.gt700"),
-    t(locale, "budget.unknown"),
-  ];
+  const currencyOptions = ["USD", "KGS", "RUB"];
 
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [service, setService] = useState(serviceOptions[0]);
-  const [budget, setBudget] = useState(budgetOptions[0]);
+  const [budgetAmount, setBudgetAmount] = useState("");
+  const [currency, setCurrency] = useState(currencyOptions[0]);
   const [message, setMessage] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +42,9 @@ export function ContactForm() {
       setError(t(locale, "lead.errContact"));
       return;
     }
+
+    // Бюджет — свободная строка на бэке: собираем «сумма + валюта» (пустая, если суммы нет).
+    const budget = budgetAmount.trim() ? `${budgetAmount.trim()} ${currency}` : "";
 
     setSubmitting(true);
     try {
@@ -103,13 +101,24 @@ export function ContactForm() {
 
         <div className="block">
           <span className="text-sm font-medium">{t(locale, "lead.budget")}</span>
-          <div className="mt-1.5">
-            <Select
-              value={budget}
-              onChange={setBudget}
-              options={budgetOptions}
-              placeholder={t(locale, "select.placeholder")}
+          <div className="mt-1.5 flex gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={budgetAmount}
+              onChange={(e) => setBudgetAmount(e.target.value)}
+              placeholder={t(locale, "budget.amountPlaceholder")}
+              className={`${inputClass} flex-1`}
             />
+            <div className="w-28 shrink-0">
+              <Select
+                value={currency}
+                onChange={setCurrency}
+                options={currencyOptions}
+                placeholder={t(locale, "budget.currency")}
+              />
+            </div>
           </div>
         </div>
       </div>

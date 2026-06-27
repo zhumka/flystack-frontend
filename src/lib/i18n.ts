@@ -154,11 +154,8 @@ const dict: Record<Locale, Record<string, string>> = {
     "svcOpt.bot": "Telegram-бот и Mini App",
     "svcOpt.auto": "Автоматизация",
     "svcOpt.other": "Другое",
-    "budget.lt100": "до 100 000 ₽",
-    "budget.100_300": "100–300 000 ₽",
-    "budget.300_700": "300–700 000 ₽",
-    "budget.gt700": "более 700 000 ₽",
-    "budget.unknown": "Пока не знаю",
+    "budget.amountPlaceholder": "Например, 5000",
+    "budget.currency": "Валюта",
 
     // вход / регистрация
     "login.welcome": "Добро пожаловать",
@@ -445,11 +442,8 @@ const dict: Record<Locale, Record<string, string>> = {
     "svcOpt.bot": "Telegram bot & Mini App",
     "svcOpt.auto": "Automation",
     "svcOpt.other": "Other",
-    "budget.lt100": "under $1,000",
-    "budget.100_300": "$1,000–3,000",
-    "budget.300_700": "$3,000–7,000",
-    "budget.gt700": "over $7,000",
-    "budget.unknown": "Not sure yet",
+    "budget.amountPlaceholder": "e.g. 5000",
+    "budget.currency": "Currency",
 
     "login.welcome": "Welcome",
     "login.subtitle": "Sign in to leave reviews about the studio's work.",
